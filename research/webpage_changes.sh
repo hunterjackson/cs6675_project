@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SITE=$1
-
+echo "website -> $1"
 fingerprint=`curl -s $SITE | sha256sum -t`
 ts=`date --iso-8601=seconds`
 
