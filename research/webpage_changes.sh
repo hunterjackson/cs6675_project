@@ -9,7 +9,7 @@ echo "$ts| $fingerprint"
 
 new_fingerprint=`curl -s $SITE | sha256sum -t`
 
-while [[ $fingerprint=$new_fingerprint ]] 
+while [[ $fingerprint = $new_fingerprint ]] 
 do
 	new_fingerprint=`curl -s $SITE | sha256sum -t`
 	sleep 5s
