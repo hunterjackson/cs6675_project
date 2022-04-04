@@ -4,7 +4,7 @@ PAGES=("https://arstechnica.com/science/2022/04/nasas-big-rocket-faces-its-last-
 	"https://www.npr.org/2022/03/22/1088113080/can-nuclear-power-save-a-struggling-coal-town"
 	"https://www.nytimes.com/2022/03/31/world/europe/us-sanctions-russia.html")
 
-for value in "${PAGES[@]}"
+for page in "${PAGES[@]}"
 do
-	echo "$(date --iso-8601=second)| $(curl -s $value | sha256sum)"
+	echo "$(date --iso-8601=second) [$(sed -nE 's|https://([^/]+)/.*$|\1|p' <(echo $page))] $(curl -s $page | sha256sum)"
 done
