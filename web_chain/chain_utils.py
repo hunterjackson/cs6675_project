@@ -6,6 +6,7 @@ DOC_ID_KEY: Final[bytes] = 'doc_id'.encode('utf8')
 PEK_KEY: Final[bytes] = 'public_key'.encode('utf8')
 PREV_DOC_ID_KEY: Final[bytes] = 'previous_doc_id'.encode('utf8')
 IP_ADDRESS_KEY: Final[bytes] = 'ip_address'.encode('utf8')
+BLOCK_SEPERATOR: Final[bytes] = ':'.encode('utf8')
 
 
 def bytes_256_validator(public_key: bytes) -> bytes:
@@ -16,7 +17,7 @@ def bytes_256_validator(public_key: bytes) -> bytes:
 
 
 def sha256_hash_entry(entry: 'chain.BaseEntry') -> bytes:
-    from web_chain.chain import BaseDocumentEntry, DocumentUpdateEntry, RootEntry, HostLocationEntry
+    from web_chain.entries import BaseDocumentEntry, DocumentUpdateEntry, RootEntry, HostLocationEntry
 
     if isinstance(entry, RootEntry):
         return entry.sha256_hash  # fixed hash value for root
@@ -40,4 +41,14 @@ def sha256_hash_entry(entry: 'chain.BaseEntry') -> bytes:
         hash_builder.update(PEK_KEY)
         hash_builder.update(entry.public_key)
 
+    return hash_builder.digest()
+
+
+def sha256_hash_block(block: 'web_chain.blocks.BaseBlock'):
+    # TODO: mining
+    hash_builder = sha256()
+    hash_builder.update(block.previous_block.sha256_hash)
+    for entry in block.entries:
+        hash_builder.update(BLOCK_SEPERATOR)
+        hash_builder.update(entry.sha256_hash)
     return hash_builder.digest()

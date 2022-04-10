@@ -2,7 +2,7 @@ from base64 import standard_b64decode
 
 import pytest
 
-from web_chain.chain import *
+from web_chain.entries import *
 
 BYTES_8: bytes = (1234567890).to_bytes(length=8, byteorder='big')
 BYTES_7: bytes = (1234567890).to_bytes(length=7, byteorder='big')
