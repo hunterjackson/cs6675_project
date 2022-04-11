@@ -1,5 +1,5 @@
 from hashlib import sha256
-from typing import Final
+from typing import Final, Optional
 
 PREV_ENTRY_HASH_KEY: Final[bytes] = 'previous_entry_hash'.encode('utf8')
 DOC_ID_KEY: Final[bytes] = 'doc_id'.encode('utf8')
@@ -8,12 +8,22 @@ PREV_DOC_ID_KEY: Final[bytes] = 'previous_doc_id'.encode('utf8')
 IP_ADDRESS_KEY: Final[bytes] = 'ip_address'.encode('utf8')
 BLOCK_SEPERATOR: Final[bytes] = ':'.encode('utf8')
 
+MIN_INT = -2 ** 63
+MAX_INT = 2 ** 63 - 1
 
-def bytes_256_validator(public_key: bytes) -> bytes:
-    assert public_key is not None
-    assert isinstance(public_key, bytes)
-    assert len(public_key) == 8
-    return public_key
+BLOCK_HASH_LEADING_ZEROS = 3
+
+
+def bytes_256_validator(payload: bytes) -> bytes:
+    # TODO: 256 bits is 32 bytes....wtf duh
+    assert isinstance(payload, bytes)
+    assert len(payload) == 32
+    return payload
+
+
+def int_64_bit_validator(value: int):
+    assert MIN_INT <= value <= MAX_INT
+    return value
 
 
 def sha256_hash_entry(entry: 'chain.BaseEntry') -> bytes:
@@ -44,11 +54,33 @@ def sha256_hash_entry(entry: 'chain.BaseEntry') -> bytes:
     return hash_builder.digest()
 
 
-def sha256_hash_block(block: 'web_chain.blocks.BaseBlock'):
+def validate_block_hash(hash_value: bytes):
+    assert len(hash_value) == 32
+    return (hash_value[0] >> 5) == 0
+
+
+def sha256_hash_block(block: 'web_chain.blocks.BaseBlock', nonce: Optional[int]):
     # TODO: mining
+    hash_builder = _init_hash_builder(block)
+    if nonce is not None:
+        hash_builder.update(nonce)
+        hash_value = hash_builder.digest()
+        assert validate_block_hash(hash_value)
+        return nonce, hash_value
+
+    for nonce in range(MIN_INT, MAX_INT):
+        _hash_builder = hash_builder.copy()
+        _hash_builder.update(nonce.to_bytes(length=8, byteorder='big', signed=True))
+        hash_value = _hash_builder.digest()
+        if validate_block_hash(hash_value):
+            return nonce, hash_value
+    raise ValueError(f'Unable to find hash value with {BLOCK_HASH_LEADING_ZEROS} leading zeros')
+
+
+def _init_hash_builder(block: 'web_chain.blocks.BaseBlock'):
     hash_builder = sha256()
     hash_builder.update(block.previous_block.sha256_hash)
     for entry in block.entries:
         hash_builder.update(BLOCK_SEPERATOR)
         hash_builder.update(entry.sha256_hash)
-    return hash_builder.digest()
+    return hash_builder
