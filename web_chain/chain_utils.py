@@ -11,7 +11,7 @@ BLOCK_SEPERATOR: Final[bytes] = ':'.encode('utf8')
 MIN_INT = -2 ** 63
 MAX_INT = 2 ** 63 - 1
 
-BLOCK_HASH_LEADING_ZEROS = 3
+BLOCK_HASH_LEADING_ZEROS = 4
 
 
 def bytes_256_validator(payload: bytes) -> bytes:
@@ -56,7 +56,7 @@ def sha256_hash_entry(entry: 'chain.BaseEntry') -> bytes:
 
 def validate_block_hash(hash_value: bytes):
     assert len(hash_value) == 32
-    return (hash_value[0] >> 5) == 0
+    return (hash_value[0] >> (8 - BLOCK_HASH_LEADING_ZEROS)) == 0
 
 
 def sha256_hash_block(block: 'web_chain.blocks.BaseBlock', nonce: Optional[int]):
