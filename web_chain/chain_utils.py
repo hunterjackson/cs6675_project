@@ -60,7 +60,6 @@ def validate_block_hash(hash_value: bytes):
 
 
 def sha256_hash_block(block: 'web_chain.blocks.BaseBlock', nonce: Optional[int]):
-    # TODO: mining
     hash_builder = _init_hash_builder(block)
     if nonce is not None:
         hash_builder.update(nonce)
