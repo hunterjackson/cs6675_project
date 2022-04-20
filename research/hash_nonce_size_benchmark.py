@@ -31,7 +31,7 @@ if __name__ == '__main__':
     payloads += [i.to_bytes(BYTES_DOCUMENT_ENTRY * 3, 'big', signed=False) for i in range(200, 300)]
     payloads += [i.to_bytes(BYTES_DOCUMENT_ENTRY * 5, 'big', signed=False) for i in range(300, 400)]
     print('num_leading_zeros, seconds_per_hash')
-    for num_leading_zeros in range(1, 33):
+    for num_leading_zeros in range(20, 33):
         timer = Timer(lambda: calculate_hashes(payloads, num_leading_zeros))
         passes, seconds = timer.autorange()  # guarantees the test will take at least 0.2 seconds to run
         print(f'{num_leading_zeros}, {seconds / (passes * len(payloads))}')
