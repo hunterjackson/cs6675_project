@@ -4,7 +4,7 @@ from timeit import Timer
 from typing import Tuple
 from random import randint
 
-BYTES_DOCUMENT_ENTRY = 201  # number of bytes in a block with a single document entry
+BYTES_DOCUMENT_ENTRY = 129  # number of bytes in a single document entry
 
 
 def calculate_nonce(p: bytes, __num_leading_zeros: int) -> int:
@@ -33,7 +33,7 @@ def calculate_hashes(_payloads: Tuple[bytes], _num_leading_zeros: int):
 
 if __name__ == '__main__':
 
-    random_integers = tuple(randint(0, 2 ** BYTES_DOCUMENT_ENTRY) for _ in range(25))
+    random_integers = tuple(randint(0, 2 ** (BYTES_DOCUMENT_ENTRY * 8)) for _ in range(25))
     payloads = tuple(i.to_bytes(BYTES_DOCUMENT_ENTRY, 'little', signed=False) for i in random_integers)
     # print(len(payloads))
     print('num_leading_zeros, seconds_per_hash')
