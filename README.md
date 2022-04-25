@@ -12,6 +12,10 @@ The implementation of the blockchain and the proof of concept web server can be 
 
 ## Running Proof of Concept
 
+![ezgif-4-3ebaf297f3](https://user-images.githubusercontent.com/6844618/165016900-967ea174-aec7-4277-871e-7b530fe4ae90.gif)
+
+
+
 Assuming all requirements have been installed
 
 start web server
