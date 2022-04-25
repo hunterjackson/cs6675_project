@@ -6,10 +6,12 @@ from uuid import uuid4
 from fastapi import FastAPI, Response
 from fastapi.responses import HTMLResponse
 from fastecdsa import keys, curve
+from fastecdsa.curve import P256
+from fastecdsa.keys import export_key
 
 from blocks import RootBlock, BaseBlock, Block
 from chain_utils import doc_id
-from entries import HostLocationEntry, DocumentPublishEntry
+from entries import HostLocationEntry, DocumentPublishEntry, BaseDocumentEntry, BaseEntry
 
 INDIANESS: Final[Literal["little"]] = 'little'
 
@@ -79,9 +81,11 @@ class WebChainThread(Thread):
                 _doc_id = doc_id(doc_contents, self.private_key)
                 with open(self.storage_dir / _doc_id.hex(), 'w+') as f:
                     f.write(doc_contents)
-                entry = DocumentPublishEntry(self.chain_state.tail.entries[-1], _doc_id, self.public_key_bytes)
+                entry = DocumentPublishEntry(self.chain_state.tail.entries[-1], _doc_id,
+                                             export_key(self.public_key, P256).encode('utf8'))
                 block = Block(self.chain_state.tail, [entry])
                 assert block.nonce is not None
+                self.chain_state.tail = block
 
             if self.num_blocks_to_gen is not None:
                 self.num_blocks_to_gen -= 1
@@ -98,7 +102,19 @@ app = FastAPI(on_startup=[lambda: [t.start() for t in threads]], on_shutdown=[la
 def get_document(doc_id: str, response: Response):
     try:
         with open(document_dir / doc_id) as f:
-            return f.read()
+            contents = f.read()
+        response.headers['Cache-Control'] = 'public, max-age=31557600, immutable'
+        response.headers['ETag'] = doc_id
+        tail_entry: BaseEntry = state.tail.entries[-1]
+        doc_id_bytes = bytes.fromhex(doc_id)
+        while True:
+            if tail_entry is tail_entry.previous_entry:
+                raise Exception("Cannot find entry")
+            if isinstance(tail_entry, BaseDocumentEntry) and tail_entry.doc_id == doc_id_bytes:
+                break
+            tail_entry = tail_entry.previous_entry
+        response.headers['X-Public-Key'] = tail_entry.public_key.hex()
+        return contents
     except FileNotFoundError:
         response.status_code = 404
         return f'''<!DOCTYPE html>
