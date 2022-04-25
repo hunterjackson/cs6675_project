@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from threading import Thread, Lock
 from typing import Optional, Literal, Final
@@ -79,23 +80,30 @@ class WebChainThread(Thread):
             with self.chain_state.lock:
                 doc_contents = DOC_TEMPLATE.format(str(uuid4()))
                 _doc_id = doc_id(doc_contents, self.private_key)
-                with open(self.storage_dir / _doc_id.hex(), 'w+') as f:
-                    f.write(doc_contents)
                 entry = DocumentPublishEntry(self.chain_state.tail.entries[-1], _doc_id,
                                              export_key(self.public_key, P256).encode('utf8'))
                 block = Block(self.chain_state.tail, [entry])
                 assert block.nonce is not None
                 self.chain_state.tail = block
+                with open(self.storage_dir / _doc_id.hex(), 'w+') as f:
+                    f.write(doc_contents)
 
             if self.num_blocks_to_gen is not None:
                 self.num_blocks_to_gen -= 1
+
+
+def cleanup_files(_dir: Path):
+    for f in os.listdir(_dir):
+        os.remove(_dir / f)
 
 
 document_dir = Path('/home/hunter/bin/cs6675_project/files')
 state = ChainState()
 threads = [WebChainThread(state, document_dir), WebChainThread(state, document_dir),
            WebChainThread(state, document_dir)]
-app = FastAPI(on_startup=[lambda: [t.start() for t in threads]], on_shutdown=[lambda: [t.stop() for t in threads]])
+app = FastAPI(on_startup=[lambda: [t.start() for t in threads]],
+              on_shutdown=[lambda: [t.stop() for t in threads], lambda: [t.join() for t in threads],
+                           lambda: cleanup_files(document_dir)])
 
 
 @app.get('/', response_class=HTMLResponse)

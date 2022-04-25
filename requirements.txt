@@ -3,3 +3,4 @@ fastecdsa==2.2.3
 pytest==7.1.1
 pytest-benchmark[histogram]==3.4.1
 fastapi[all]==0.75.2
+requests~=2.27.1
