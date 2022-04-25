@@ -35,4 +35,4 @@ def test_block():
     assert block_2.entries == (entry_1, entry_2)
     assert block_2.sha256_hash != block_1.sha256_hash
     # print(standard_b64encode(block_2.sha256_hash).decode('utf8'))
-    assert block_2.sha256_hash == standard_b64decode('GOWC1yyWq06OzJdG52UFOFN4XQ6zO+bl2JdtPPQZ4Hg=')
+    assert block_2.sha256_hash == standard_b64decode('DGBTrzBtnTbqKNWMYsp5YnRl7R8EJo5dwC6zK6jQSgc=')

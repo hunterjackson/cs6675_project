@@ -1,6 +1,9 @@
 from hashlib import sha256
 from typing import Final, Optional
 
+from fastecdsa import ecdsa
+from fastecdsa.encoding.der import DEREncoder
+
 PREV_ENTRY_HASH_KEY: Final[bytes] = 'previous_entry_hash'.encode('utf8')
 DOC_ID_KEY: Final[bytes] = 'doc_id'.encode('utf8')
 PEK_KEY: Final[bytes] = 'public_key'.encode('utf8')
@@ -11,13 +14,18 @@ BLOCK_SEPERATOR: Final[bytes] = ':'.encode('utf8')
 MIN_INT = -2 ** 63
 MAX_INT = 2 ** 63 - 1
 
-BLOCK_HASH_LEADING_ZEROS = 4
+BLOCK_HASH_LEADING_ZEROS = 18
 
 
-def bytes_256_validator(payload: bytes) -> bytes:
-    # TODO: 256 bits is 32 bytes....wtf duh
+def bytes_32_validator(payload: bytes) -> bytes:
     assert isinstance(payload, bytes)
     assert len(payload) == 32
+    return payload
+
+
+def bytes_64_validator(payload: bytes) -> bytes:
+    assert isinstance(payload, bytes)
+    assert len(payload) == 64
     return payload
 
 
@@ -26,8 +34,14 @@ def int_64_bit_validator(value: int):
     return value
 
 
+def doc_id(doc_contents: str, private_key) -> bytes:
+    doc_hash = sha256(doc_contents.encode('utf8')).digest()
+    a, b = ecdsa.sign(doc_hash, private_key)
+    return DEREncoder.encode_signature(a, b)
+
+
 def sha256_hash_entry(entry: 'chain.BaseEntry') -> bytes:
-    from web_chain.entries import BaseDocumentEntry, DocumentUpdateEntry, RootEntry, HostLocationEntry
+    from entries import BaseDocumentEntry, DocumentUpdateEntry, RootEntry, HostLocationEntry
 
     if isinstance(entry, RootEntry):
         return entry.sha256_hash  # fixed hash value for root
@@ -56,7 +70,16 @@ def sha256_hash_entry(entry: 'chain.BaseEntry') -> bytes:
 
 def validate_block_hash(hash_value: bytes):
     assert len(hash_value) == 32
-    return (hash_value[0] >> (8 - BLOCK_HASH_LEADING_ZEROS)) == 0
+    # number of leading bytes that must be zero
+    zero_byte_length = BLOCK_HASH_LEADING_ZEROS // 8
+    if any(hash_value[i] != 0 for i in range(zero_byte_length)):
+        return False
+
+    # number of bits that must be zero in the leading non-zero byte
+    zero_bit_length = BLOCK_HASH_LEADING_ZEROS % 8
+    if (hash_value[zero_byte_length] >> (8 - zero_bit_length)) == 0:
+        return True
+    return False
 
 
 def sha256_hash_block(block: 'web_chain.blocks.BaseBlock', nonce: Optional[int]):

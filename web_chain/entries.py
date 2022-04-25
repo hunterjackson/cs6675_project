@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Final, Optional
 
 import chain_utils
-from chain_utils import bytes_256_validator
+from chain_utils import bytes_32_validator, bytes_64_validator
 
 
 class BaseEntry(ABC):
@@ -63,8 +63,8 @@ class DocumentPublishEntry(BaseDocumentEntry):
 
     def __init__(self, previous_entry: BaseEntry, doc_id: bytes, public_key: bytes):
         self._previous_entry: Final[BaseEntry] = previous_entry
-        self._doc_id: Final[bytes] = bytes_256_validator(doc_id)
-        self._public_key: Final[bytes] = bytes_256_validator(public_key)
+        self._doc_id: Final[bytes] = doc_id
+        self._public_key: Final[bytes] = public_key
         self._sha256_hash: Optional[bytes] = None
 
     @property
@@ -91,9 +91,9 @@ class DocumentUpdateEntry(BaseDocumentEntry):
 
     def __init__(self, previous_entry: BaseEntry, previous_doc_id: bytes, doc_id: bytes, public_key: bytes):
         self._previous_entry: Final[BaseEntry] = previous_entry
-        self.previous_doc_id: Final[bytes] = bytes_256_validator(previous_doc_id)
-        self._doc_id: Final[bytes] = bytes_256_validator(doc_id)
-        self._public_key: Final[bytes] = bytes_256_validator(public_key)
+        self.previous_doc_id: Final[bytes] = bytes_32_validator(previous_doc_id)
+        self._doc_id: Final[bytes] = bytes_32_validator(doc_id)
+        self._public_key: Final[bytes] = bytes_32_validator(public_key)
         self._sha256_hash: Optional[bytes] = None
 
     @property
@@ -121,7 +121,7 @@ class HostLocationEntry(BaseEntry):
         self._previous_entry: Final[BaseEntry] = previous_entry
         self._sha256_entry: Optional[bytes] = None
         self.ipaddress: Final[bytes] = ipaddress
-        self.public_key: Final[bytes] = bytes_256_validator(public_key)
+        self.public_key: Final[bytes] = bytes_64_validator(public_key)
 
     @property
     def sha256_hash(self) -> bytes:
