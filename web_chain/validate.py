@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 from hashlib import sha256
 from os import listdir
